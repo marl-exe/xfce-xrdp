@@ -1,14 +1,16 @@
 # XFCE + xRDP
 
-> **Looking for a $10.88/year VPS?** Use my VPS links:
+> **Looking for a # XFCE + xRDP
+
+0.88/year VPS?** Use my referral links:
 >
-> DediRock Promo VPS: https://billing.dedirock.com/index.php/store/promo-vp
+> DediRock Promo VPS - New York: https://billing.dedirock.com/aff.php?aff=898&pid=264
 >
-> DediRock Promo VPS - Los Angeles: https://billing.dedirock.com/index.php/store/promo-vps-los-angeles
+> DediRock Promo VPS - Los Angeles: https://billing.dedirock.com/aff.php?aff=898&pid=265
 >
 > GreenCloudVPS: https://greencloudvps.com/billing/aff.php?aff=10195&gid=68
 >
-> The GreenCloudVPS link is a referral/affiliate link, which may provide me with a referral benefit if you sign up through it. DediRock links above are direct promo-store links. Pricing and stock can change.
+> These are referral/affiliate links, which may provide me with a referral benefit if you sign up through them. Pricing and stock can change.
 
 Interactive installer for a lightweight **XFCE desktop over xRDP** on Ubuntu VPS servers. It creates an isolated non-root desktop user, installs a minimal XFCE/xRDP stack, can optionally install **Brave Origin**, and lets you choose how TCP/3389 is exposed.
 
@@ -220,10 +222,10 @@ The installer does not intentionally modify Docker, nginx, MariaDB, Redis, Ptero
 
 ## Need a VPS?
 
-> DediRock Promo VPS: https://billing.dedirock.com/index.php/store/promo-vp
+> DediRock Promo VPS - New York: https://billing.dedirock.com/aff.php?aff=898&pid=264
 >
-> DediRock Promo VPS - Los Angeles: https://billing.dedirock.com/index.php/store/promo-vps-los-angeles
+> DediRock Promo VPS - Los Angeles: https://billing.dedirock.com/aff.php?aff=898&pid=265
 >
 > GreenCloudVPS: https://greencloudvps.com/billing/aff.php?aff=10195&gid=68
 
-The GreenCloudVPS link is a referral/affiliate link, which may provide me with a referral benefit if you sign up through it. DediRock links above are direct promo-store links. Pricing and stock can change.
+These are referral/affiliate links, which may provide me with a referral benefit if you sign up through them. Pricing and stock can change.
