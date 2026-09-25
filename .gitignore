@@ -1,0 +1,20 @@
+# Local/editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local test/output files
+*.log
+*.tmp
+state.env
+
+# Never commit private material
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+.env
+.env.*
