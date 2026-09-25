@@ -68,7 +68,7 @@ Detected: Ubuntu 24.04 (amd64)
 CPU cores: 4
 Memory: 8.0Gi
 
-Desktop/RDP username [browser]: marlrdp
+Desktop/RDP username [browser]:
 
 Set the password used to sign in through RDP:
 New password:
