@@ -5,6 +5,7 @@ PROJECT_NAME="xfce-xrdp"
 STATE_DIR="/var/lib/${PROJECT_NAME}"
 STATE_FILE="${STATE_DIR}/state.env"
 STARTWM="/etc/xrdp/startwm.sh"
+XRDP_INI="/etc/xrdp/xrdp.ini"
 BRAVE_KEY="/usr/share/keyrings/brave-browser-archive-keyring.gpg"
 BRAVE_SOURCE="/etc/apt/sources.list.d/brave-browser-release.sources"
 
@@ -90,7 +91,7 @@ if prompt_yes_no "Install Brave Origin?" "Y"; then
 fi
 
 printf '\nRDP firewall mode:\n'
-printf '  1) SSH tunnel only / do not add a TCP 3389 firewall rule (recommended)\n'
+printf '  1) SSH tunnel only / bind TCP 3389 to localhost (recommended)\n'
 printf '  2) Allow TCP 3389 only from one IPv4 address\n'
 printf '  3) Allow TCP 3389 publicly\n'
 read -r -p 'Choice [1]: ' FIREWALL_MODE
@@ -143,6 +144,26 @@ log "Updating APT metadata..."
 apt-get update
 log "Installing XFCE and xRDP..."
 DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y "${PACKAGES[@]}" "${UTILITY_PACKAGES[@]}"
+
+# Omitting a UFW allow rule does not block public RDP connections.
+# SSH tunnel mode must bind xRDP to localhost even if UFW is inactive.
+if [[ "$FIREWALL_MODE" == "1" ]]; then
+  [[ -f "$XRDP_INI" ]] || die "Missing xRDP configuration: $XRDP_INI"
+  if ! awk '
+    /^[[]Globals[]][[:space:]]*$/ { in_globals = 1; next }
+    /^[[]/ { in_globals = 0 }
+    in_globals && /^[[:space:]]*port[[:space:]]*=/ { found = 1 }
+    END { exit(found ? 0 : 1) }
+  ' "$XRDP_INI"; then
+    die "Could not find the [Globals] port setting in $XRDP_INI; refusing to assume SSH tunnel mode is safe."
+  fi
+  cp -a "$XRDP_INI" "${STATE_DIR}/xrdp.ini.backup"
+  write_state_var XRDP_INI_BACKED_UP "1"
+  sed -i '/^[[]Globals[]][[:space:]]*$/,/^[[]/ s|^[[:space:]]*port[[:space:]]*=.*$|port=tcp://127.0.0.1:3389|' "$XRDP_INI"
+  log "Binding xRDP to 127.0.0.1:3389 (SSH tunnel only)."
+  # Apply before optional Brave installation to minimize public exposure.
+  systemctl restart xrdp
+fi
 
 BRAVE_NEWLY_INSTALLED=0
 BRAVE_REPO_CREATED=0
@@ -212,7 +233,7 @@ UFW_RULE_ADDED=0
 if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
   case "$FIREWALL_MODE" in
     1)
-      log "UFW is active; TCP 3389 remains closed to new public connections."
+      log "SSH tunnel mode: xRDP is bound to localhost; no TCP 3389 UFW rule was added."
       ;;
     2)
       ufw allow from "$ALLOWED_IP" to any port 3389 proto tcp comment 'xfce-xrdp' >/dev/null
@@ -238,7 +259,14 @@ systemctl restart xrdp
 if ! systemctl is-active --quiet xrdp; then
   die "xRDP did not start successfully. Check: systemctl status xrdp --no-pager"
 fi
-if ! ss -ltn | awk '{print $4}' | grep -Eq '(^|:)3389$'; then
+if [[ "$FIREWALL_MODE" == "1" ]]; then
+  if ! ss -H -ltn | awk '$4 == "127.0.0.1:3389" { found = 1 } END { exit(found ? 0 : 1) }'; then
+    die "SSH tunnel mode verification failed: no 127.0.0.1:3389 listener found."
+  fi
+  if ss -H -ltn | awk '$4 ~ /:3389$/ && $4 != "127.0.0.1:3389" { found = 1 } END { exit(found ? 0 : 1) }'; then
+    die "SSH tunnel mode verification failed: a non-localhost TCP 3389 listener exists."
+  fi
+elif ! ss -ltn | awk '{print $4}' | grep -Eq '(^|:)3389$'; then
   warn "xRDP is active, but TCP 3389 was not detected as listening."
 fi
 
@@ -257,9 +285,9 @@ fi
 printf '\n'
 case "$FIREWALL_MODE" in
   1)
-    printf 'RDP exposure:  No UFW rule added (SSH tunnel recommended)\n'
+    printf 'RDP exposure:  Localhost only (SSH tunnel required)\n'
     printf 'Example tunnel from your computer:\n'
-    printf '  ssh -L 13389:127.0.0.1:3389 root@YOUR_SERVER_IP\n'
+    printf '  ssh -L 13389:127.0.0.1:3389 YOUR_SSH_USER@YOUR_SERVER_IP\n'
     printf 'Then connect RDP to: 127.0.0.1:13389\n'
     ;;
   2)
