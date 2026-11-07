@@ -24,7 +24,7 @@ The project is designed for remote browser/admin workloads without converting th
 - XFCE compositing disabled for lower remote-desktop overhead
 - Optional Brave Origin installation from Brave's official APT repository
 - Three RDP exposure choices:
-  - SSH tunnel only / no new UFW rule
+  - SSH tunnel only / xRDP bound to `127.0.0.1:3389`
   - Allow one IPv4 address
   - Public TCP/3389
 - Existing xRDP startup configuration is backed up before modification
@@ -77,7 +77,7 @@ Retype new password:
 Install Brave Origin? [Y/n]: y
 
 RDP firewall mode:
-  1) SSH tunnel only / do not add a TCP 3389 firewall rule (recommended)
+  1) SSH tunnel only / bind TCP 3389 to localhost (recommended)
   2) Allow TCP 3389 only from one IPv4 address
   3) Allow TCP 3389 publicly
 Choice [1]: 2
@@ -99,10 +99,10 @@ For a direct connection, enter your VPS public IP and sign in with the desktop u
 
 ### SSH tunnel mode
 
-If you selected mode 1, keep TCP/3389 closed and tunnel RDP through SSH:
+If you selected mode 1, the installer sets the `[Globals]` port in `/etc/xrdp/xrdp.ini` to `tcp://127.0.0.1:3389`. xRDP listens only on localhost, even if UFW is inactive or TCP/3389 was previously allowed. Tunnel RDP through SSH:
 
 ```bash
-ssh -L 13389:127.0.0.1:3389 root@YOUR_SERVER_IP
+ssh -N -L 13389:127.0.0.1:3389 YOUR_SSH_USER@YOUR_SERVER_IP
 ```
 
 Leave that SSH session open, then connect Remote Desktop to:
@@ -111,13 +111,13 @@ Leave that SSH session open, then connect Remote Desktop to:
 127.0.0.1:13389
 ```
 
-This is the preferred setup when you do not need public RDP access.
+This is the preferred setup when you do not need public RDP access. You can verify the server listener using `sudo ss -lntp | grep ':3389'`; in mode 1 it should show `127.0.0.1:3389`, not `*:3389`. The original `xrdp.ini` is backed up in `/var/lib/xfce-xrdp/` and restored by the uninstaller.
 
 ## Public RDP warning
 
 TCP/3389 exposed to the Internet will be scanned and attacked. Prefer an SSH tunnel, VPN/Tailscale, or an IP-restricted firewall rule whenever possible.
 
-The installer changes UFW only when UFW is already active. It does **not** automatically enable UFW because doing so on an existing VPS could interfere with SSH, game servers, panels, Docker services, or other workloads. Provider-side firewalls must be managed separately.
+In mode 1, localhost-only binding prevents direct public RDP connections independently of UFW. For modes 2 and 3, the installer changes UFW only when UFW is already active. **Mode 2 does not enforce an IP restriction when UFW is inactive, and an existing broad allow rule could override the intended restriction.** Verify active rules and the provider firewall before relying on modes 2 or 3. The installer does **not** automatically enable UFW because doing so on an existing VPS could interfere with SSH, game servers, panels, Docker services, or other workloads. Provider-side firewalls must be managed separately.
 
 ## Brave Origin
 
