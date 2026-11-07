@@ -5,6 +5,7 @@ PROJECT_NAME="xfce-xrdp"
 STATE_DIR="/var/lib/${PROJECT_NAME}"
 STATE_FILE="${STATE_DIR}/state.env"
 STARTWM="/etc/xrdp/startwm.sh"
+XRDP_INI="/etc/xrdp/xrdp.ini"
 BRAVE_KEY="/usr/share/keyrings/brave-browser-archive-keyring.gpg"
 BRAVE_SOURCE="/etc/apt/sources.list.d/brave-browser-release.sources"
 
@@ -59,6 +60,9 @@ remove_desktop_stack() {
 
   if [[ "${STARTWM_BACKED_UP:-0}" == "1" && -f "${STATE_DIR}/startwm.sh.backup" ]]; then
     cp -a "${STATE_DIR}/startwm.sh.backup" "$STARTWM"
+  fi
+  if [[ "${XRDP_INI_BACKED_UP:-0}" == "1" && -f "${STATE_DIR}/xrdp.ini.backup" ]]; then
+    cp -a "${STATE_DIR}/xrdp.ini.backup" "$XRDP_INI"
   fi
 
   if [[ "${XFWM4_BACKED_UP:-0}" == "1" && -f "${STATE_DIR}/xfwm4.xml.backup" ]]; then
